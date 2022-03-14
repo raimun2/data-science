@@ -3,7 +3,7 @@ library(tidyverse)
 set.seed(42)
 
 # cargo imagen
-imagen <- image_read("02.kmeans/uai.jpg")
+imagen <- image_read("data/uai.jpg")
 
 # genero variable con los datos de valores rgb
 imagen_num <- as.numeric(image_data(imagen, channels = "rgb"))
