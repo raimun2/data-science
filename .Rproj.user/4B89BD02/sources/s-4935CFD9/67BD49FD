@@ -1,26 +1,26 @@
 {
-    "id": "FFEE0ACF",
+    "id": "67BD49FD",
     "path": "C:/Users/raimundo.sanchez/Dropbox/01.Docencia/mineria_de_datos/Mineria-de-datos/R/03.DBScan.R",
     "project_path": "R/03.DBScan.R",
     "type": "r_source",
-    "hash": "242542463",
+    "hash": "1656005427",
     "contents": "",
     "dirty": false,
-    "created": 1647872537615.0,
+    "created": 1647893233945.0,
     "source_on_save": false,
     "relative_order": 2,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "45,26",
-        "scrollLine": "30"
+        "cursorPosition": "50,0",
+        "scrollLine": "39"
     },
     "folds": "",
-    "lastKnownWriteTime": 1647892118,
+    "lastKnownWriteTime": 1647894246,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1647892118754,
+    "last_content_update": 1647894246010,
     "read_only": false,
     "read_only_alternatives": []
 }
