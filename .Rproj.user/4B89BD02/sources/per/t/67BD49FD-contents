@@ -16,7 +16,8 @@ ggplot(data, aes(Critic_Score, User_Score)) +
 data_clean <- data %>% 
   mutate(User_Score = as.numeric(User_Score)) %>% 
   filter(!(is.na(Critic_Score) | is.na(User_Score))) %>%
-  select(Critic_Score, User_Score, User_Count, Global_Sales)
+  select(Critic_Score, User_Score, User_Count, Global_Sales) %>% 
+  unique()
 
 # echo un vistazo
 data_clean %>% glimpse()
@@ -48,17 +49,32 @@ data_tsne <- data_clean %>%
 ggplot(data_tsne, aes(V1, V2)) + 
   geom_point(alpha = 0.5)
 
+
 # visualizo grafico de kNN
 kNNdistplot(data_tsne, k = 4)
 abline(h=1.2, col = "red", lty = 2)
 dev.off() 
 
 # hago un DBScan con parametro observado
-modelo_dbscan <- dbscan(data_tsne, eps = 1.2, minPts = 15)
+modelo_dbscan <- dbscan(data_tsne, eps = 1.2, minPts = 5)
 
 #visualizo
 ggplot(data_tsne, aes(V1, V2, col = factor(modelo_dbscan$cluster))) + 
   geom_point(alpha = 0.5) +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  scale_color_manual(values = colors())
 
+modelo_dbscan$cluster %>% max()
+
+max(modelo_dbscan$cluster)
+
+modelo_dbscan$cluster %>% unique() %>% length()
+
+estad <- data_clean %>% 
+  mutate(cluster = modelo_dbscan$cluster) %>% 
+  group_by(cluster) %>%
+  summarise(mean(User_Score),
+            mean(Critic_Score),
+            mean(Global_Sales),
+            mean(User_Count))
 
