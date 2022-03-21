@@ -32,7 +32,7 @@ data_PCA <- data_clean %>%
 data_PCA2 <- as_tibble(predict(prcomp(data_clean, scale. = TRUE))[,1:2])
 
 # visualizo PCA
-ggplot(data_PCA, aes(PC1,PC2)) + 
+ggplot(data_PCA, aes(PC1, PC2)) + 
   geom_point(alpha = 0.5)
 
 # extraigo dimensiones obtenidas del tsne
@@ -43,7 +43,7 @@ data_tsne <- data_clean %>%
   as.data.frame()
 
 # visualizo tsne
-ggplot(data_tsne, aes(V1,V2)) + 
+ggplot(data_tsne, aes(V1, V2)) + 
   geom_point(alpha = 0.5)
 
 # visualizo grafico de kNN

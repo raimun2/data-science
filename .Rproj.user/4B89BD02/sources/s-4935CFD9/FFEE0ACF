@@ -3,7 +3,7 @@
     "path": "C:/Users/raimundo.sanchez/Dropbox/01.Docencia/mineria_de_datos/Mineria-de-datos/R/03.DBScan.R",
     "project_path": "R/03.DBScan.R",
     "type": "r_source",
-    "hash": "1524495925",
+    "hash": "242542463",
     "contents": "",
     "dirty": false,
     "created": 1647872537615.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "56,10",
-        "scrollLine": "43"
+        "cursorPosition": "45,26",
+        "scrollLine": "30"
     },
     "folds": "",
-    "lastKnownWriteTime": 1647883528,
+    "lastKnownWriteTime": 1647892118,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1647883528565,
+    "last_content_update": 1647892118754,
     "read_only": false,
     "read_only_alternatives": []
 }
