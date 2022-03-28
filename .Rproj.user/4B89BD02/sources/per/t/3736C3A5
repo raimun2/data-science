@@ -3,9 +3,9 @@
     "path": "C:/Users/raimundo.sanchez/Dropbox/01.Docencia/mineria_de_datos/Mineria-de-datos/R/04.hierarchical.R",
     "project_path": "R/04.hierarchical.R",
     "type": "r_source",
-    "hash": "0",
+    "hash": "54437594",
     "contents": "",
-    "dirty": true,
+    "dirty": false,
     "created": 1648497226819.0,
     "source_on_save": false,
     "relative_order": 1,
@@ -17,11 +17,11 @@
         "scrollLine": "100"
     },
     "folds": "",
-    "lastKnownWriteTime": 1648499670,
+    "lastKnownWriteTime": 1648500537,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1648499898526,
+    "last_content_update": 1648500537371,
     "read_only": false,
     "read_only_alternatives": []
 }

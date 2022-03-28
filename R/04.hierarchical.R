@@ -112,6 +112,6 @@ clusters_jer <- function(data, i_d, i_a, k){
 }
 
 # probamos la funcion con distintos valores de i_d, i_a, y k
-clusters_jer(data_tsne, 1, 5, 13)
+clusters_jer(data_tsne, 2, 5, 13)
 
 
