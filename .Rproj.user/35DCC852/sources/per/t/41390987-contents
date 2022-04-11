@@ -1,0 +1,142 @@
+# cargo librerias
+pacman::p_load(tidyverse, Rtsne, mclust, e1071)
+set.seed(42)
+
+# cargo la data y aplico los mismos tratamientos que en el caso de DBScan
+data_cruda  <- read.csv("data/video_games_sales.csv") %>% 
+  mutate(User_Score = as.numeric(User_Score)) %>%
+  filter(!(is.na(Critic_Score) | is.na(User_Score))) 
+
+duplicados <- data_cruda %>%
+  select(Critic_Score, User_Score, User_Count, Global_Sales) %>% 
+  duplicated()
+
+data_sin_dupes  <- data_cruda %>% 
+  filter(!duplicados) 
+
+data_tsne <- data_sin_dupes %>%
+  select(Critic_Score, User_Score, User_Count, Global_Sales) %>% 
+  Rtsne() %>% 
+  .$Y %>% 
+  as.data.frame()
+
+# exploramos graficamente la data
+ggplot(data_tsne) +
+  geom_point(aes(V1,V2))
+
+## Evaluacion
+
+#Existen diversos metodos de evaluacion de calidad de los clusters resultantes. 
+
+#El primero que revisaremos es la inspeccion visual
+
+# uso distancia euclidiana
+tempDist <- dist(data_numerica) %>% as.matrix()
+
+#reordeno filas y columnas en base al cluster obtenido
+index <- sort(modelo_kmeans$cluster, index.return=TRUE)
+tempDist <- tempDist[index$ix,index$ix]
+rownames(tempDist) <- c(1:nrow(data))
+colnames(tempDist) <- c(1:nrow(data))
+
+image(tempDist)
+
+
+
+
+# El siguiente metodo es el estadistico de Hopkins, que esta implementado en la libreria factoextra. 
+
+
+library(factoextra)
+
+#Calcula el hopkins statistic 
+res <- get_clust_tendency(data_numerica, n = 30, graph = FALSE)
+
+print(res)
+
+
+# Luego vamos a implementar el indice de correlacion
+
+
+
+
+#Correlation
+#construyo matriz de correlacion ideal (cada entidad correlaciona 1 con su cluster)
+tempMatrix <- matrix(0, nrow = nrow(data_escala), ncol = nrow(data_escala))
+tempMatrix[which(index$x==1), which(index$x==1)]  <- 1
+tempMatrix[which(index$x==2), which(index$x==2)]  <- 1
+tempMatrix[which(index$x==3), which(index$x==3)]  <- 1
+tempMatrix[which(index$x==4), which(index$x==4)]  <- 1
+tempMatrix[which(index$x==5), which(index$x==5)]  <- 1
+tempMatrix[which(index$x==6), which(index$x==6)]  <- 1
+tempMatrix[which(index$x==7), which(index$x==7)]  <- 1
+tempMatrix[which(index$x==8), which(index$x==8)]  <- 1
+tempMatrix[which(index$x==9), which(index$x==9)]  <- 1
+tempMatrix[which(index$x==10), which(index$x==10)] <- 1
+
+#construyo matriz de disimilitud
+tempDist2 <- 1/(1+tempDist)
+
+#Calcula correlacion 
+cor <- cor(tempMatrix[upper.tri(tempMatrix)],tempDist2[upper.tri(tempDist2)])
+
+print(cor)
+
+
+#Tambien implementaremos indice de cohesion y el de separacion, que son muy similares.
+
+
+library(flexclust) # usaremos la distancia implementada en flexclus (dist2) que maneja mejor objetos de diferente tamaño
+data_escala <- apply(data_escala,2,as.numeric)
+
+#Cohesion
+withinCluster <- numeric(10)
+for (i in 1:10){
+  tempData <- data_escala[which(modelo_kmeans$cluster == i),]
+  withinCluster[i] <- sum(dist2(tempData,colMeans(tempData))^2)
+}
+cohesion = sum(withinCluster)
+#es equivalente a model$tot.withinss en k-means
+print(c(cohesion, modelo_kmeans$tot.withinss))
+
+#Separation
+meanData <- colMeans(data_escala)
+SSB <- numeric(10)
+for (i in 1:10){
+  tempData <- data_escala[which(modelo_kmeans$cluster==i),]
+  SSB[i] <- nrow(tempData)*sum((meanData-colMeans(tempData))^2)
+}
+separation = sum(SSB)
+
+print(separation)
+
+# Y finalmente aplicamos el coeficiente de silueta, implementado en libreria cluser
+
+
+library(cluster)
+
+coefSil <- silhouette(modelo_kmeans$cluster,dist(data_escala))
+summary(coefSil)
+
+#visualizamos el codigo de silueta de cada cluster
+fviz_silhouette(coefSil) + coord_flip()
+
+
+# Utilizamos el coeficiente de silueta para encontrar el mejor valor de K
+
+
+
+coefSil=numeric(30)
+for (k in 2:30){
+  modelo <- kmeans(data_escala, centers = k)
+  temp <- silhouette(modelo$cluster,dist(data_escala))
+  coefSil[k] <- mean(temp[,3])
+}
+tempDF=data.frame(CS=coefSil,K=c(1:30))
+
+ggplot(tempDF, aes(x=K, y=CS)) + 
+  geom_line() +
+  scale_x_continuous(breaks=c(1:30))
+
+
+
