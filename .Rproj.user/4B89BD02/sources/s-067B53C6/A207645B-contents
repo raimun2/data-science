@@ -105,7 +105,7 @@ for (i in 1:length(separation)){
   # extraigo los puntos pertenecientes al cluster i
   tempData <- data_tsne[which(clusters==i),]
   # calculo la separacion como la distancia promedio entre cada punto de un cluster y el resto
-  separation[i] <- nrow(tempData)*sum((meanData-colMeans(tempData))^2)
+  separation[i] <- nrow(tempData)*sum((centroide_total-colMeans(tempData))^2)
 }
 (sum(separation))
 
@@ -113,7 +113,7 @@ for (i in 1:length(separation)){
 # Y finalmente aplicamos el coeficiente de silueta, implementado en libreria cluster
 
 # el coeficiente recibe las etiquetas de cluster y la matriz de distancias de la data original
-coefSil <- silhouette(clusters,dist(data_tsne))
+coefSil <- silhouette(clusters, dist(data_tsne))
 summary(coefSil)
 
 #visualizamos el codigo de silueta de cada cluster
@@ -121,81 +121,9 @@ fviz_silhouette(coefSil) + coord_flip()
 
 
 # Utilizamos el coeficiente de silueta para encontrar el mejor valor de K
-source("R/clusteriza.R")
 
 # creamos vector vacio para almacenar siluetas
-
-
-linkage <- c("ward.D", "ward.D2", "single", "complete", 
-             "average", "mcquitty", "median", "centroid")
-cov <- mclust.options("emModelNames")
-
-hiperpars <- tibble::tribble(~model, ~param, 
-                             "kmeans", "k",
-                             "hier", "linkage",
-                             "hier", "h",
-                             "gmm", "k",
-                             "gmm", "cov",
-                             "dbscan", "minpts", 
-                             "dbscan", "eps",
-                             "cmeans", "k",
-                             "cmeans", "fuzz")
-
-models <- c("kmeans", "hier", "gmm", "cmeans", "dbscan")
-
-# veamos con todos los modelos
-d <- dist(data_tsne)
-dists <- quantile(d, p = (1:9)/10)
-nks <- floor(quantile(1:sqrt(nrow(data_tsne)), p = (1:9)/10))
-
-siluetas <- NULL
-
-for(m in models){
-  if(m == "hier"){
-    for(lnk in linkage){
-      for(ks in nks){
-        c <- clusteriza(data_tsne, model = m, linkage = lnk, k = ks)
-        siluetas <- rbind(siluetas, c(mean(silhouette(c, d)[,3]), paste0(m, "-linkage:",lnk,"-h:",dis)))
-      }
-      
-    }
-  }
-  
-  if(m == "kmeans"){
-    for(ks in nks){
-      c <- clusteriza(data_tsne, model = m, k = ks)      
-      siluetas <- rbind(siluetas, c(mean(silhouette(c, d)[,3]), paste0(m, "-k:",ks)))
-    }
-  }
-  
-  if(m == "cmeans"){
-    for(ks in nks){
-      for(fz in 2:10){
-        c <- clusteriza(data_tsne, model = m, k = ks, fuzz = fz)
-        siluetas <- rbind(siluetas, c(mean(silhouette(c, d)[,3]), paste0(m, "-k:",ks,"-fuzz:",fz)))
-      }
-    }
-  }
-  
-  if(m == "gmm"){
-    for(ks in nks){
-      for(cv in cov){
-        c <- clusteriza(data_tsne, model = m, k = ks, cov = cv)  
-        siluetas <- rbind(siluetas, c(mean(silhouette(c, d)[,3]), paste0(m, "-k:",ks,"-cov:",cv)))
-      }
-    }
-  }
-  
-  if(m == "dbscan"){
-    for(ep in dists){
-      for(mp in 5*(1:9)){
-        c <- clusteriza(data_tsne, model = m, eps = ep, minpts = mp)
-        siluetas <- rbind(siluetas, c(mean(silhouette(c, d)[,3]), paste0(m, "-eps:",eps,"-minpts:",mp)))
-      }
-    }
-  }
-}
-
+siluetas <- numeric(20)
 
 for (k in 2:20){
   # ejecutamos kmedias con k centroides
@@ -214,5 +142,5 @@ ggplot(tempDF, aes(x=K, y=CS)) +
   geom_vline(xintercept = which(tempDF$CS == max(tempDF$CS)), col = "red")
 
 
-
+source("R/clusteriza.R")
 

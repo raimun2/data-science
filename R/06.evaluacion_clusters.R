@@ -105,7 +105,7 @@ for (i in 1:length(separation)){
   # extraigo los puntos pertenecientes al cluster i
   tempData <- data_tsne[which(clusters==i),]
   # calculo la separacion como la distancia promedio entre cada punto de un cluster y el resto
-  separation[i] <- nrow(tempData)*sum((meanData-colMeans(tempData))^2)
+  separation[i] <- nrow(tempData)*sum((centroide_total-colMeans(tempData))^2)
 }
 (sum(separation))
 
@@ -113,7 +113,7 @@ for (i in 1:length(separation)){
 # Y finalmente aplicamos el coeficiente de silueta, implementado en libreria cluster
 
 # el coeficiente recibe las etiquetas de cluster y la matriz de distancias de la data original
-coefSil <- silhouette(clusters,dist(data_tsne))
+coefSil <- silhouette(clusters, dist(data_tsne))
 summary(coefSil)
 
 #visualizamos el codigo de silueta de cada cluster

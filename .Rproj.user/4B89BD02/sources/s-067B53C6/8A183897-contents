@@ -2,8 +2,7 @@ pacman::p_load(mclust, e1071, cluster, flexclust, factoextra, magrittr)
 
 models <- c("kmeans", "hier", "gmm", "cmeans", "dbscan")
 
-clusteriza <- function(data, model, k = NULL, linkage = "complete", 
-                       h = NULL, cov = "EII", minpts = 5,
+clusteriza <- function(data, model, k = NULL, linkage = "complete", cov = "EII", minpts = 5,
                        eps = NULL, fuzz = 2, return.model = FALSE){
   if(is.null(eps) & model == "dbscan") {eps <- data %>% cov() %>% diag() %>% sum() %>% sqrt()}
   if(is.null(k) & (model %in% c("kmeans", "cmeans", "gmm"))) {k <- floor(sqrt(nrow(data)))}
@@ -40,7 +39,4 @@ clusteriza <- function(data, model, k = NULL, linkage = "complete",
     print("modelo no soportado")
   }
 }
-
-
-
 
