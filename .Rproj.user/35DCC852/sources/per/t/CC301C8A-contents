@@ -1,51 +1,42 @@
-# cargo librerias
-pacman::p_load(tidymodels, kknn)
+# Regression Example (kknn)
 
-# define funciones de tidymodels por defecto
+
+library(tidymodels)
 tidymodels_prefer()
-
-# modelo prediccion
-# cargamos la data
 data(Chicago)
 
-# identificamos el numero de filas
 n <- nrow(Chicago)
-
-# seleccionamos variables relevantes
 Chicago <- Chicago %>% select(ridership, Clark_Lake, Quincy_Wells)
 
-# separo datos de entrenamiento y de prueba
 Chicago_train <- Chicago[1:(n - 7), ]
 Chicago_test <- Chicago[(n - 6):n, ]
 
-# construyo el modelo
 knn_reg_spec <-
   nearest_neighbor(neighbors = 5, weight_func = "triangular") %>%
+  # This model can be used for classification or regression, so set mode
   set_mode("regression") %>%
   set_engine("kknn")
-
-# veo el modelo
 knn_reg_spec
 
-# ajusto parametros del modelo
+
 knn_reg_fit <- knn_reg_spec %>% fit(ridership ~ ., data = Chicago_train)
-# veo prediccion
 knn_reg_fit
 
-# predigo valores para conjunto de prueba
 predict(knn_reg_fit, Chicago_test)
 
-## clasificacion
+# Classification Example (kknn)
 
-# cargo la data
+
+library(tidymodels)
+tidymodels_prefer()
 data(two_class_dat)
 
-# separo datos de entrenamiento y de prueba
 data_train <- two_class_dat[-(1:10), ]
 data_test  <- two_class_dat[  1:10 , ]
 
 knn_cls_spec <-
   nearest_neighbor(neighbors = 11, weight_func = "triangular") %>%
+  # This model can be used for classification or regression, so set mode
   set_mode("classification") %>%
   set_engine("kknn")
 knn_cls_spec
