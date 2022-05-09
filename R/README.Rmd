@@ -1,0 +1,101 @@
+---
+title: "Modelamiento paramétrico"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Para comparar modelos parametricos con no-parametricos, utilizaremos la data de Churn, que significa la tasa de "fuga de clientes" de un banco en particular.
+
+Cargamos los datos y los exploramos
+
+```{r, message=FALSE, warning= FALSE}
+library(tidyverse)
+
+data <- read_csv("Churn_Modelling.csv")
+
+data %>% glimpse()
+
+```
+
+Vemos que la data contiene 14 columnas y 10 mil observaciones. Hay 3 variables que son categoricas, Apellido, Geografia y Genero. Tenure mide el numero de años que un cliente lleva en el banco. 
+
+Antes de aplicar algun modelo de ML vamos a separar la data en conjunto de entrenamiento y conjunto de pruebas. Tambien vamos a quitar la columna RowNumber, y las variables que no son numericas. En el caso de Gender la transformaremos a numerica
+
+```{r}
+data$RowNumber <- NULL
+
+data$Surname <- NULL
+data$Geography <- NULL
+
+data$is_female <- (data$Gender == "Female") %>% as.numeric()
+data$Gender <- NULL
+
+
+set.seed(42)
+sample <- sample(1:nrow(data), .8*10000)
+
+trainData <- data[sample,]
+testData <- data[-sample,]
+```
+
+Para implementar el modelo Naive Bayes vamos a utilizar la libreria e1071, que tiene implementado este metodo. 
+
+```{r}
+library(e1071)
+
+modeloNB <- naiveBayes(Exited ~ ., data = trainData)
+pred <- predict(modeloNB, testData, type ="raw")
+
+modeloNB
+
+```
+
+Calculamos el AUC para evaluar la capacidad del modelo de predecir. Este indice varia entre 0.5 y 1, donde 1 es mejor.
+
+```{r}
+
+library(pROC)
+
+testData$prob <- pred[,2]
+
+curva_roc <- roc(Exited ~ prob, data = testData)
+
+plot(curva_roc)    
+
+auc(curva_roc)
+
+
+```
+
+Ahora probaremos con un modelo no-parametrico, en este caso el modelo knn. Este modelo viene implementado en la libreria class. Antes de implementarlo debemos escalar la data utilizando la funcion scale.
+
+```{r}
+library(class)
+
+testData$prob <- NULL
+
+clasetrain <- factor(trainData$Exited)
+clasetest <- factor(testData$Exited)
+
+trainData <-  scale(trainData) %>% data.frame()
+testData <- scale(testData) %>% data.frame()
+
+modeloknn <- knn(trainData[,-10], testData[,-10], cl = clasetrain, k = 15, prob = TRUE)
+
+testData$prob <- modeloknn %>% as.character() %>% as.numeric()
+
+testData$Exited <- clasetest %>% as.character() %>% as.numeric()
+
+curva_roc <- roc(Exited ~ prob, data = testData)
+
+plot(curva_roc)    
+
+auc(curva_roc)
+
+```
+
+Vemos el el AUC del modelo KNN en esta ocasion esta por debajo del modelo parametrico Naive Bayes. 
+
