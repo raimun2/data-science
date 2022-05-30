@@ -1,4 +1,4 @@
-pacman::p_load(tidymodels, tidyverse, nycflights13)
+pacman::p_load(tidymodels, tidyverse, nycflights13, klaR)
 set.seed(42)
 options(scipen = 999)
 
@@ -81,7 +81,7 @@ evaluar_modelo(model, flights_rec, fligth_split)
 # probamos la funcion con otros tipos de modelos
 nb_model <- naive_Bayes() %>% 
   set_mode("classification") %>% 
-  set_engine("klaR")
+  set_engine("naivebayes")
 
 evaluar_modelo(nb_model, flights_rec, fligth_split)
 
