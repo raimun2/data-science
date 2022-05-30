@@ -93,7 +93,7 @@ params <- expand.grid(tree_depth = 1:5,
                       min_n = 5:10)
 
 
-# usamos map para iterar sobre las 88 opciones y generar resultados
+# usamos map para iterar sobre las opciones y generar resultados
 # almacenamos resultados en vector res
 res <- map2_dfr(params$tree_depth, 
                 params$min_n, 
