@@ -63,21 +63,12 @@ fitea_polySVM <- function(grado){
     set_mode("classification") %>% 
     translate()
   
-  modelo_fit <- 
-    workflow() %>% 
-    add_model(mod) %>% 
-    add_recipe(receta) %>% 
-    fit(data = train_data)
+  fitea(mod)
   
-  model_pred <- 
-    predict(modelo_fit, test_data, type = "prob") %>% 
-    bind_cols(test_data) 
-  
-  return(model_pred %>% 
-           roc_auc(truth = Exited, .pred_0))
 }
 
 # testeamos polinomios
 fitea_polySVM(1)
 fitea_polySVM(2)
 fitea_polySVM(3)
+fitea_polySVM(10)
