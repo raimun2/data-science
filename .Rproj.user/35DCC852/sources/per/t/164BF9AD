@@ -3,7 +3,7 @@
     "path": "C:/Users/raimu/Dropbox/01.Docencia/mineria_de_datos/data-science/R/01.introduccion.R",
     "project_path": "R/01.introduccion.R",
     "type": "r_source",
-    "hash": "2880707254",
+    "hash": "2224161782",
     "contents": "",
     "dirty": false,
     "created": 1659552545552.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "38,0",
-        "scrollLine": "20"
+        "cursorPosition": "13,0",
+        "scrollLine": "0"
     },
     "folds": "",
-    "lastKnownWriteTime": 1659561612,
+    "lastKnownWriteTime": 1659561684,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1659561612768,
+    "last_content_update": 1659561684551,
     "read_only": false,
     "read_only_alternatives": []
 }

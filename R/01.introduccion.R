@@ -11,6 +11,8 @@ mundiales <-
                                             "third") ~ "3y4",
                           TRUE ~ "grupos"))
 
+
+
 head(mundiales) 
 
 hist(mundiales$goles_partido)
@@ -34,35 +36,4 @@ ggplot(fase_agg, aes(x=year, y =goles_partido, col=fase)) +
   xlab("Año del mundial") +
   ylab("# Goles") + 
   ggtitle("Promedio de goles por partido segun año y fase de los Mundiales")         
-
-  
-
-
-### reduccion de dimensiones
-autos = mtcars
-
-# aplicamos componentes principales y generamos un objeto
-PCA_cars = prcomp(autos)
-
-cars2 = as.data.frame(predict(PCA_cars))
-
-ggplot(cars2, aes(PC1, PC2)) + geom_point()
-
-PCA_cars_scales = prcomp(autos, scale. = TRUE)
-
-cars3 = as.data.frame(predict(PCA_cars_scales))
-
-ggplot(cars3, aes(PC1, PC2)) + geom_point()
-
-library(Rtsne)
-set.seed(42)
-
-tsne_cars = Rtsne(autos, perplexity = 8)
-
-cars4 = as.data.frame(tsne_cars$Y)
-
-ggplot(cars4, aes(V1, V2)) + geom_point()
-
-
-
 
