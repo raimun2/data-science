@@ -1,85 +1,169 @@
-pacman::p_load()
+pacman::p_load(tidyverse, proxy)
 
-data <- read_rds()
-head(data)
+data_raw <- read_rds("data/partidos_futbol.rds")
 
-str(data)
+data_raw %>% glimpse()
+
+data_raw <- data_raw %>% mutate(formationUsed = factor(formationUsed))
+
+data_num <- data_raw %>% 
+  mutate(equipo = as.numeric(factor(equipo))) %>% 
+  select(where(is.numeric)) 
+
+# creamos un subconjunto para que sea mas liviano
+data <-
+  data_num %>% 
+  select(equipo, accuratePass, wonTackle, goalsConceded,
+         ontargetScoringAtt, totalScoringAtt, saves) %>% 
+  sample_n(700)
 
 
-summary(data)
+# Comparación entre atributtos ----
 
-dim(data)
+## los metodos de similaridad y distancias disponibles en el paquete proxy
+summary(pr_DB)
 
-# en R base definimos el nuevo objeto data1 al especificar filas y columnas de la data original
-# los corchetes cuadrados denotan [fila, columna]
-data1 <- data[data$week_year >= 2012, c("week_year", "rank_number", "player_slug")]
 
-dim(data1)
+## Correlaciones
 
-library(tidyverse)
+cor(data$ontargetScoringAtt, data$accuratePass, method = "pearson")
+
+cor(data$ontargetScoringAtt, data$accuratePass, method = "spearman")
+
+cor(data$ontargetScoringAtt, data$accuratePass, method = "kendall")
+
+## Similitudes
+
+simil(list(data$ontargetScoringAtt,data$accuratePass), method = "cosine")
+
+simil(list(data$ontargetScoringAtt,data$accuratePass), method = "Jaccard")
+
+simil(list(data$ontargetScoringAtt,data$accuratePass), method = "simple matching")
+
+simil(list(data$ontargetScoringAtt,data$accuratePass), method = "Kulczynski1")
+
+## Distancias
+
+dist(list(data$ontargetScoringAtt,data$accuratePass), method = "Euclidean") 
+
+dist(list(data$ontargetScoringAtt,data$accuratePass), method = "Manhattan") 
+
+dist(list(data$ontargetScoringAtt,data$accuratePass), method = "supremum") 
+
+
+# Feature Selection -----
+
+## Fuerza bruta
+
+library(stuart) 
+
+results <- bruteforce(data, list(ra = names(data)), 3,
+                      cores = 1)  # numero de nucleos en la maquina
+
+
+summary(results) 
+
+## Metodos de Optimizacion 
+
+library(FSinR)   
+
+# definimos primero el algoritmo de busqueda
+
+searcher <- searchAlgorithm('hillClimbing')
+searcher <- searchAlgorithm('geneticAlgorithm')
+searcher <- searchAlgorithm('tabu', list(tamTabuList = 4, iter = 5, intensification=2, iterIntensification=5, diversification=1, iterDiversification=5, verbose=FALSE) )
+searcher <- searchAlgorithm('antColony')
+searcher <- searchAlgorithm('sequentialForwardSelection')
+
+# luego definimos el criterio de evaluacion
+
+evaluator <- filterEvaluator('determinationCoefficient')
+evaluator <- filterEvaluator("IEConsistency")
+evaluator <- filterEvaluator('chiSquared')
+evaluator <- filterEvaluator('MDLC') 
+evaluator <- wrapperEvaluator("xgbLinear")
+evaluator <- wrapperEvaluator("svmLinearWeights")
+evaluator <- wrapperEvaluator("mlpWeightDecay")
+evaluator <- wrapperEvaluator("lm")
+evaluator <- wrapperEvaluator("knn")
+
+# Utilizamos una combinacion de estos para encontrar la combinacion de atributos que maximiza la funcion de evaluacion
+results <- featureSelection(data, 'equipo', searcher, evaluator)
+
+results$bestFeatures
+
+## Búsqueda directa
+
+directSearcher <- directSearchAlgorithm('selectKBest', list(k=3))
+
+results <- directFeatureSelection(data_num_sub, 'equipo', directSearcher, evaluator)
+
+results$bestFeatures
+
+
+# Reduccion de Dimensiones -----
 
 data2 <- data %>% 
-  filter(week_year >= 2012) %>% 
-  select(week_year, rank_number, player_slug)
-
-dim(data2)
-
-unicos <- unique(data2)
-
-dim(unicos)
-
-# genero un listado de 1000 numeros aleatorios a partir de los valores entre 1 y el numero de registros unicos, sin reperirse
-sampleIndex <- sample(1:nrow(unicos),1000, replace = F)
-
-# extraigo las filas correspondientes al lista generado
-sampleData <- unicos[sampleIndex,]
-
-dim(sampleData)
-
-# agrego la variable rank_number calculandole la mediana, para cada semana y jugador
-agg_df <- aggregate(rank_number ~ week_year + player_slug, data1, mean)
-
-dim(agg_df)
-
-# calculamos el maximo valor anual con aggregate
-max_rank <- aggregate(rank_number ~ week_year, agg_df, max)
-
-# cambio el nombre de rank_number para que no se repita cuando fusione
-colnames(max_rank)[2] <- "max"
-
-# fusiono data agregada con los maximos, usando la semana como el id del cruce
-agg_df <- merge(agg_df, max_rank, by="week_year")
-
-# genero ranking relativo dividiendo ranking por el maximo de esa semana
-agg_df$rank_relative <- agg_df$rank_number / agg_df$max
-
-summary(agg_df)
+  dplyr::select(-equipo) %>% 
+  unique()
 
 
-# variable top10 es igual a una desigualdad, que retorna TRUE o FALSE. Al parsearlo como numeric, TRUE pasa a ser 1 y FALSE a 0
-agg_df$top10 <- as.numeric(agg_df$rank_number <= 10)
+## Principal Component Analysis
+PCA <- prcomp(data2)
 
-table(agg_df$top10)
+barplot(PCA$sdev) ## graficamos el aporte de varianza de cada componente principal
 
-
-#filtro data para el grafico
-data_plot <- agg_df %>% filter(top10 == 1) 
-
-ggplot(data_plot, aes(week_year, rank_number, col = player_slug)) + 
-  geom_line() + 
-  geom_point() + 
-  theme(legend.position = "bottom") +
-  scale_y_reverse() + 
-  ggtitle("Evolucion del top10 ATP entre 2012 y 2017") +
-  scale_color_viridis_d()
+features_PCA <- 
+  predict(PCA) %>% 
+  as.data.frame() 
 
 
+# Multidimensional scaling 
+d <- dist(data2) # distancias euclidianas entre entidades
+data.MDS <- cmdscale(d, eig=TRUE, k = 2) # k es el numero de dimensiones de salida
 
-library(tidyverse)
+features_MDS <- 
+  data.MDS$points %>% 
+  as.data.frame() 
+
+# nonparametric Multi Dinemsional Scaling
+library(MASS)
+data.nMDS <- isoMDS(d, k=2) 
+
+features_nMDS <- 
+  data.nMDS$points %>% 
+  as.data.frame() 
+
+# t-distributed Stochastic Neighbor Embedding
+library(Rtsne)
+data.tsne <- Rtsne(data2, dims = 3, perplexity=30, max_iter = 500)
+
+features_tsne <- 
+  data.tsne$Y %>% 
+  as.data.frame() 
+
+# uniform manifold and projection
+library(umap)
+data.umap <- umap(data2)
+
+features_umap <- data.umap$layout %>% as.data.frame()
+
+# visualizamos
+
+ggplot(features_PCA, aes(PC1,PC2)) + geom_point()
+
+ggplot(features_MDS, aes(V1,V2)) + geom_point()
+
+ggplot(features_nMDS, aes(V1,V2)) + geom_point()
+
+ggplot(features_tsne, aes(V1,V2)) + geom_point()
+
+ggplot(features_umap, aes(V1,V2)) + geom_point()
+
+
+# Ejercicio de visualizacion -----
+
 library(datasauRus)
-library(proxy)
-
-summary(datasaurus_dozen)
 
 stats <- datasaurus_dozen %>% 
   group_by(dataset) %>% 
@@ -106,19 +190,19 @@ stats <- datasaurus_dozen %>%
     max_y = max(y)
   )
 
-stats %>% glimpse()
+stats 
 
-## los metodos de similaridad y distancias disponibles en el paquete proxy
-summary(pr_DB)
+# visualizamos las diferencias
+ggplot(datasaurus_dozen, aes(x=x, y=y, colour=dataset)) +
+  geom_point() +                                        
+  theme_void() +                                        
+  theme(legend.position = "none") +                     
+  facet_wrap(~dataset, ncol=3)
 
-ggplot(datasaurus_dozen, aes(x=x, y=y, colour=dataset)) + # la primera linea define los parametros del grafico, la data, coordenadas y color
-  geom_point() +                                        # en esta linea se define la geometria de la figura, en este caso un punto
-  theme_void() +                                        # aca definimos el tema del grafico
-  theme(legend.position = "none") +                     # quitamos la leyenda 
-  facet_wrap(~dataset, ncol=3)                          # creamos un subgrafico por cada dataset  
+# otras formas de visualizar las distribuciones 
 
 ggplot(datasaurus_dozen, aes(x=x,colour=dataset))+
-  geom_histogram(binwidth = 2)+                         # cambio la geometria
+  geom_histogram(binwidth = 2)+                         
   theme_void()+
   theme(legend.position = "none")+
   facet_wrap(~dataset, ncol=3)
@@ -128,7 +212,6 @@ ggplot(datasaurus_dozen, aes(x=x,colour=dataset))+
   theme_void()+
   theme(legend.position = "none")+
   facet_wrap(~dataset, ncol=3)
-
 
 ggplot(datasaurus_dozen, aes(x=x, colour=dataset))+
   geom_boxplot()+
@@ -142,114 +225,8 @@ ggplot(datasaurus_dozen, aes(x=x, y=y, colour=dataset))+
   theme(legend.position = "none")+
   facet_wrap(~dataset, ncol=3)
 
-
-# y podemos combinar geometrias entre si
 ggplot(datasaurus_dozen, aes(x=x, y=dataset, colour=dataset)) +
   geom_point() +
   geom_boxplot() +
   theme_void() +
   theme(legend.position = "none")
-
-
-iris0 <- iris %>% unique()
-
-str(iris0)
-
-# debemos transformar variable Species en numerica, lo hacemos creando variables dummy
-iris0$setosa <- ifelse(iris0$Species == "setosa", 1, 0)
-iris0$virginica <- ifelse(iris0$Species == "virginica", 1, 0)
-iris0$versicolor <- ifelse(iris0$Species == "versicolor", 1, 0)
-
-iris_num <- iris0 # creamos una copia de la data pero con varibles numericas solamente
-iris_num$Species <- NULL
-
-
-
-
-library(stuart) 
-
-results <- bruteforce(iris_num, list(ra = names(iris_num)), 3,
-                      cores = 1)  # numero de nucleos en la maquina
-
-summary(results) 
-
-
-
-library(FSinR)   # feature selection
-
-
-searcher <- searchAlgorithm('geneticAlgorithm')
-searcher <- searchAlgorithm('tabu', list(tamTabuList = 4, iter = 5, intensification=2, iterIntensification=5, diversification=1, iterDiversification=5, verbose=FALSE) )
-searcher <- searchAlgorithm('antColony')
-searcher <- searchAlgorithm('sequentialForwardSelection')
-searcher <- searchAlgorithm('hillClimbing')
-
-
-
-
-filtro <- filterEvaluator("IEConsistency")
-filtro <- filterEvaluator('determinationCoefficient')
-filtro <- filterEvaluator('chiSquared')
-filtro <- filterEvaluator('MDLC') 
-
-
-
-results <- featureSelection(iris0, 'Species', searcher, filtro)
-
-results$bestFeatures
-
-
-evaluator <- wrapperEvaluator("xgbLinear")
-evaluator <- wrapperEvaluator("svmLinearWeights")
-evaluator <- wrapperEvaluator("mlpWeightDecay")
-evaluator <- wrapperEvaluator("lm")
-evaluator <- wrapperEvaluator("knn")
-
-results <- featureSelection(iris0, 'Species', searcher, evaluator)
-
-results$bestFeatures
-
-
-directSearcher <- directSearchAlgorithm('selectKBest', list(k=3))
-
-results <- directFeatureSelection(iris0, 'Species', directSearcher, evaluator)
-
-results$bestFeatures
-
-
-library(GGally)
-
-ggpairs(iris_num, aes(col=iris0$Species))
-
-
-
-#PCA
-PCA <- prcomp(iris_num)
-
-barplot(PCA$sdev) ## graficamos el aporte de varianza de cada componente principal
-
-predict(PCA) %>% as.data.frame() %>%  ggplot(aes(PC1,PC2, col=iris0$Species)) + geom_point()
-
-
-#MDS
-d <- dist(iris_num) # distancias euclidianas entre entidades
-MDS <- cmdscale(d,eig=TRUE, k=2) # k es el numero de dimensiones de salida
-
-MDS$points %>% as.data.frame() %>% ggplot(aes(V1,V2, col=iris0$Species)) + geom_point()
-
-
-#nMDS
-library(MASS)
-nMDS <- isoMDS(d, k=2) 
-
-nMDS$points %>% as.data.frame() %>% ggplot(aes(V1,V2, col=iris0$Species)) + geom_point()
-
-
-#tSNE
-
-library(Rtsne)
-tsne <- Rtsne(iris_num, dims = 2, perplexity=30, max_iter = 500)
-
-tsne$Y %>% as.data.frame() %>% ggplot(aes(V1,V2, col=iris0$Species)) + geom_point()
-
-

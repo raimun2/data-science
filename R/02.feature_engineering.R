@@ -142,7 +142,7 @@ features_tsne <-
   data.tsne$Y %>% 
   as.data.frame() 
 
-# unifold mappping
+# uniform manifold and projection
 library(umap)
 data.umap <- umap(data2)
 
