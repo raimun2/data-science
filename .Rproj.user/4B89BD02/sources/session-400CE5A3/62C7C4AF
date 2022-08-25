@@ -1,24 +1,26 @@
 {
-    "id": "789B1584",
+    "id": "62C7C4AF",
     "path": "C:/Users/raimundo.sanchez/Dropbox/01.Docencia/03.machine_learning_45h/ML_para_DS/R/04.hierarchical_clustering.R",
     "project_path": "R/04.hierarchical_clustering.R",
     "type": "r_source",
-    "hash": "0",
+    "hash": "2659596312",
     "contents": "",
     "dirty": false,
-    "created": 1661437174492.0,
+    "created": 1661438194868.0,
     "source_on_save": false,
     "relative_order": 1,
     "properties": {
         "source_window_id": "",
-        "Source": "Source"
+        "Source": "Source",
+        "cursorPosition": "77,18",
+        "scrollLine": "70"
     },
     "folds": "",
-    "lastKnownWriteTime": 1661351760,
+    "lastKnownWriteTime": 1661439235,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1661351760,
+    "last_content_update": 1661439235703,
     "read_only": false,
     "read_only_alternatives": []
 }
