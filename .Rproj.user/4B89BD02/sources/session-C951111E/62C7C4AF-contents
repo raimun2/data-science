@@ -100,8 +100,12 @@ d2 <- dist_dd(data.umap, method = metodos_distancias[1])
 
 model2 <- hclust(d2, method=metodos_agregacion[5]) 
 
-summary(model2)
+groups <- cutree(model2, k = 10)  
 
+# visualizamos los grupos resultantes
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(groups))) +
+  theme(legend.position = "none")
 
 # ahora hagamos una funcion para probar cualquier combinacion
 clusters_jer <- function(data, i_d, i_a, k){
