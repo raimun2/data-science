@@ -6,8 +6,9 @@ data_raw <- read_rds("data/partidos_futbol.rds")
 
 # analisis de clusters naturales ----
 data <- data_raw %>% 
-  select(where(is.numeric), -formationUsed) %>% 
-  drop_na()
+  dplyr::select(where(is.numeric), -formationUsed) %>% 
+  drop_na() %>% 
+  sample_n(1000)
 
 get_clust_tendency(data, n = 30, graph = FALSE)
 

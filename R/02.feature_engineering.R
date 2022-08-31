@@ -16,7 +16,7 @@ data <-
   data_num %>% 
   select(equipo, accuratePass, wonTackle, goalsConceded,
          ontargetScoringAtt, totalScoringAtt, saves) %>% 
-  sample_n(700)
+  sample_n(1000)
 
 
 # Comparación entre atributtos ----
