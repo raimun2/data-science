@@ -4,7 +4,7 @@ set.seed(42)
 
 # cargo la data y aplico los mismos tratamientos que en el caso de DBScan
 data.umap <- read_rds("data/partidos_futbol.rds") %>% 
-  select(where(is.numeric), -formationUsed) %>% 
+  dplyr::select(where(is.numeric), -formationUsed) %>% 
   drop_na() %>% 
   umap() %>% 
   .$layout %>% 
