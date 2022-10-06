@@ -1,10 +1,32 @@
-pacman::p_load(tidyverse, proxy)
+pacman::p_load(tidyverse, proxy, DataExplorer)
 set.seed(42)
+#https://cran.r-project.org/web/packages/DataExplorer/vignettes/dataexplorer-intro.html
+
 
 data_raw <- read_rds("data/partidos_futbol.rds")
 
-data_raw %>% glimpse()
+data_raw %>% plot_str()
 
+
+introduce(data_raw)
+
+plot_intro(data_raw)
+
+plot_missing(data_raw)
+
+drop_columns(data_raw, "goals")
+update_columns(data_raw, "goals", as.factor)
+
+plot_bar(data_raw)
+
+plot_histogram(data_raw)
+
+plot_correlation(na.omit(data_raw),  type = "c")
+
+plot_boxplot(data_raw, by = "torneo")
+
+
+###
 data_raw <- data_raw %>% mutate(formationUsed = factor(formationUsed))
 
 data_num <- data_raw %>% 

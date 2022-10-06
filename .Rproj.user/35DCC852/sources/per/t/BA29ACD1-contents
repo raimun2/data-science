@@ -1,0 +1,180 @@
+# https://www.datofutbol.cl/slides-webinar-lpdt-datos-elite/slides.html
+# https://statsbomb.com/what-we-do/hub/free-data/
+# https://figshare.com/collections/Soccer_match_event_dataset/4415000/2
+# https://statsbomb.com/what-we-do/soccer-data/360-2/
+# https://github.com/metrica-sports/sample-data
+# 
+# https://github.com/Dato-Futbol/soccerAnimate
+# https://github.com/SkillCorner/opendata
+# https://www.transfermarkt.es/weltmeisterschaft-2022/teilnehmer/pokalwettbewerb/WM22/saison_id/2021
+# https://jaseziv.github.io/worldfootballR/index.html
+# https://www.transfermarkt.es/
+# https://fbref.com/en/
+# https://www.fotmob.com/
+# https://understat.com/
+# https://jaseziv.github.io/worldfootballR/articles/fbref-data-internationals.html
+# https://raw.githubusercontent.com/JaseZiv/worldfootballR_data/master/raw-data/all_leages_and_cups/all_competitions.csv
+# https://github.com/statsbomb/StatsBombR
+# https://github.com/metrica-sports/sample-data
+# soccerway
+
+
+install.packages("StatsBombR")
+library(StatsBombR)
+competitions = FreeCompetitions()
+
+euro_2020 = competitions %>%
+  filter(competition_name == "UEFA Euro")
+euro_2020_games = FreeMatches(euro_2020)
+
+euro_2020_eventing <- StatsBombFreeEvents(MatchesDF = euro_2020_games)
+euro_2020_eventing_clean = allclean(euro_2020_eventing)
+
+library(dplyr)
+library(stringr)
+
+
+#install.packages("worldfootballR")
+#devtools::install_github("JaseZiv/worldfootballR")
+library(worldfootballR)
+url_torneo = "https://www.transfermarkt.es/weltmeisterschaft-2022/teilnehmer/pokalwettbewerb/WM22/saison_id/2021"
+selecciones = tm_league_team_urls(league_url = url_torneo, start_year = 2022)
+
+
+jugadores = NULL 
+for(team_url in selecciones) {
+  
+  temp = tibble(player_url = tm_team_player_urls(team_url)) %>% 
+    mutate(country_name = str_match(team_url, ".com/(.*?)/")[2])
+  
+  jugadores <- bind_rows(jugadores, temp)
+}
+
+
+
+
+library(ggplot2)
+library(forcats)
+library(ggrepel)
+library(cowplot)
+
+options(scipen = 8)
+glimpse(bio)
+
+data = bio %>% 
+  left_join(jugadores, by = c("URL" = "player_url")) %>% 
+  filter(!is.na(player_valuation)) %>% 
+  group_by(country_name) %>% 
+  mutate(rank = rank(-player_valuation, ties.method = "first"),
+         most_common_citizenship = names(which.max(table(citizenship)))) %>% 
+  filter(rank <= 23) %>%
+  mutate(upper_bound = quantile(player_valuation, 0.75),
+         lower_bound = quantile(player_valuation, 0.25),
+         is_outlier = ifelse(player_valuation > (upper_bound + (upper_bound-lower_bound)*1.5), 1, 0)) %>% 
+  ungroup() %>%
+  mutate(player_value_M_EUR = player_valuation/1000000,
+         group = case_when(country_name %in% c("katar", "ecuador", "niederlande", "senegal") ~ "A",
+                           country_name %in% c("england", "iran", "vereinigte-staaten", "wales") ~ "B",
+                           country_name %in% c("argentinien", "saudi-arabien", "mexiko", "polen") ~ "C",
+                           country_name %in% c("danemark", "frankreich", "tunesien", "australien") ~ "D",
+                           country_name %in% c("deutschland", "spanien", "costa-rica", "japan") ~ "E",
+                           country_name %in% c("marokko", "kroatien", "belgien", "kanada") ~ "F",
+                           country_name %in% c("schweiz", "kamerun", "brasilien", "serbien") ~ "G",
+                           country_name %in% c("uruguay", "sudkorea", "portugal", "ghana") ~ "H"),
+         country_name = str_replace(most_common_citizenship, " Jamaica", ""))
+
+col_text_and_lines = "grey80"
+col_background = "#252525"
+
+p1 = ggplot(data, aes(x = fct_reorder(country_name, player_value_M_EUR), 
+                      y = player_value_M_EUR, fill = group, col = group)) +
+  geom_boxplot(alpha = 0.65) + 
+  geom_text_repel(data %>% filter(is_outlier == 1), 
+                  mapping = aes(label = player_name, col = group), size = 2) +
+  scale_fill_brewer(palette = "Set1") +
+  scale_colour_brewer(palette = "Set1") +
+  scale_y_continuous(breaks = seq(0, 180, 20)) +
+  coord_flip() +
+  theme_bw() +
+  guides(colour = "none",
+         fill = guide_legend(nrow = 1, label.position = "top")) +
+  labs(x = "", y = "\nValor de mercado\n[Millones de EUR]", fill = "Grupo",
+       title = "Distribución de valor $ de mercado de las 32 selecciones en Qatar 2022",
+       subtitle = "Se consideran los 23 jugadores mejor valorados de cada plantilla al 13-09-2022",
+       caption = "Data: Transfermarkt - Viz: @DatoFutbol_cl") +
+  theme(panel.background = element_rect(fill = col_background, colour = col_text_and_lines),
+        plot.background = element_rect(fill = col_background, colour = "transparent"),
+        legend.background = element_rect(fill = col_background, colour = "transparent"),
+        legend.box.background = element_rect(fill = col_background, colour = "transparent"),
+        panel.grid = element_line(colour = "grey20", size = 0.05),
+        text = element_text(colour = col_text_and_lines, size = 10),
+        axis.text.x = element_text(colour = col_text_and_lines),
+        axis.text.y = element_text(colour = col_text_and_lines),
+        legend.position = "top",
+        legend.key = element_rect(fill = col_background),
+        plot.margin = margin(1, 1, 0.5, 0.5, unit = "cm"))
+
+p2 <- ggdraw() +
+  draw_plot(p1) +
+  draw_image("images/qatar.png",  x = 0.42, y = 0.41, scale = 0.12)
+p2
+
+ggsave("images/valores_qatar.png", height = 9, width = 12)
+
+
+library(worldfootballR)
+liga_url = fb_league_urls(country = "ENG", gender = "M", season_end_year = 2022, tier = "1st")
+equipos =  fb_teams_urls(liga_url)
+
+jugadores_url = fb_player_urls(equipos[1])
+
+
+cancelo_PL2122_stats <- fb_player_scouting_report(player_url =jugadores_url[2], pos_versus = "primary") %>% 
+  filter(scouting_period == "2021-2022 Premier League")
+
+library(ggplot2)
+library(forcats)
+library(glue)
+library(ggtext)
+
+options(scipen = 8)
+target_metrics = c("Carries into Final Third", "Crosses", "Dribbles Completed", "Progressive Passes",
+                   "xG Assisted", "Goals", "Non-Penalty xG", "Passes Under Pressure", "Switches",
+                   "Tackles", "Successful Pressures", "Blocks", "Interceptions", "Clearances",
+                   "Miscontrols", "Dispossessed", "Ball Recoveries", "Shots on target %", "Shots Total")
+
+data = cancelo_PL2122_stats %>% 
+  filter(Statistic %in% target_metrics) %>%
+  distinct(Statistic, .keep_all = T) %>% 
+  mutate(stat_group = case_when(StatGroup %in% c("Standard", "Shooting") ~ "Ataque",
+                                StatGroup %in% c("Passing", "Pass Types", "Possession") ~ "Posesión",
+                                StatGroup %in% c("Miscellaneous Stats", "Defense") ~ "Defensa"),
+         stat_group = factor(stat_group, levels = c("Defensa", "Posesión", "Ataque")))
+
+ggplot(data %>% filter(scouting_period == "2021-2022 Premier League"), 
+       aes(x = Statistic, y = Percentile, fill = Percentile)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 10), expand = c(0.012, 0)) +
+  coord_flip() +
+  theme_bw() +
+  geom_hline(yintercept = 50, size = 1) +
+  geom_hline(yintercept = c(25, 75), size = 0.5, col = "grey20", linetype = 'dotted') +
+  geom_label(aes(label = Per90), fill = "white", size = 2.7, hjust = 0) +
+  scale_fill_gradient2(low = "#f94144", mid = "#f9c74f", high = "#43aa8b",  
+                       midpoint = 50, breaks = c(0, 25, 50, 75, 100), limits = c(0, 100)) +
+  facet_grid(rows = vars(stat_group), scales = "free", switch = "y", space = "free_y") +
+  labs(x = "", y = "",  
+       title = glue("\nPerfil estadístico de {unique(data$Player)}\n{unique(data$BasedOnMinutes)} minutos jugados en M. City en la temporada 21-22 de Premier League"), 
+       subtitle = "Percentiles obtenidos al comparar con los laterales de las 5 principales ligas de Europa y Torneos UEFA\n",
+       caption = "Data: FBref - Las etiquetas muestran los valores cada 90 minutos.\nVisualización: @DatoFutbol_cl", fill = "Percentil") +
+  theme(legend.position = "bottom",
+        plot.margin = margin(0.5, 1, 0.5, 0.5, "cm"),
+        panel.spacing.y = unit(0, "lines"),
+        title = element_markdown(size = 12),
+        strip.background = element_rect(fill = "white"),
+        strip.text = element_text(size = 10, face = "bold"))
+
+ggsave("images/barras_cancelo.png", width = 12, height = 9)
+
+
+
