@@ -11,10 +11,13 @@ tidymodels_prefer()
 data_raw <- read_rds("data/partidos_futbol.rds")
 
 
+
+
 # cargo la data y aplico los mismos tratamientos que en el caso de DBScan
 data.num <- data_raw %>% 
   dplyr::select(where(is.numeric), -formationUsed) %>% 
   drop_na() 
+
 
 
 # identificamos el numero de filas
