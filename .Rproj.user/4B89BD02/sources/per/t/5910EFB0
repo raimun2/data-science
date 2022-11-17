@@ -1,26 +1,26 @@
 {
-    "id": "ED439B45",
-    "path": "C:/Users/raimu/Dropbox/01.Docencia/03.machine_learning/ML_para_DS/R/12.SVM.R",
+    "id": "5910EFB0",
+    "path": "C:/Users/raimundo.sanchez/Dropbox/01.Docencia/03.machine_learning/ML_para_DS/R/12.SVM.R",
     "project_path": "R/12.SVM.R",
     "type": "r_source",
     "hash": "1815863164",
     "contents": "",
-    "dirty": false,
-    "created": 1667402439805.0,
+    "dirty": true,
+    "created": 1667475577071.0,
     "source_on_save": false,
-    "relative_order": 2,
+    "relative_order": 1,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "85,0",
-        "scrollLine": "57"
+        "cursorPosition": "1,45",
+        "scrollLine": "0"
     },
     "folds": "",
     "lastKnownWriteTime": 1667404345,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1667404345967,
+    "last_content_update": 1667475728583,
     "read_only": false,
     "read_only_alternatives": []
 }
